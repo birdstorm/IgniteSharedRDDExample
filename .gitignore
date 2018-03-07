@@ -1,0 +1,14 @@
+
+# IntelliJ project files
+.idea
+*.iml
+out
+gen### Scala template
+*.class
+*.log
+*.jar
+
+ignite/
+target/
+spark-warehouse/
+src/test/
