@@ -9,23 +9,25 @@ class Job {
   def work(): Unit = {
     val sharedRDD: IgniteRDD[Integer, Integer] = igniteContext.fromCache("sharedRDD")
 
+    println(">>> #1 Collecting values stored in Ignite Shared RDD...")
+
+    sharedRDD.take(10).foreach(println)
+
     if (sharedRDD.count() == 0) {
+      println(">>> Ignite Shared RDD is empty, initializing...")
       sharedRDD.savePairs(sparkContext.parallelize(1 to 10000, 10).map(i => (i, i)))
     } else {
       sharedRDD.savePairs(sharedRDD.mapValues(x => x + 1), overwrite = true)
     }
 
-    println(">>> #1 Collecting values stored in Ignite Shared RDD...")
+    println(">>> #1 View current values in Ignite Shared RDD...")
 
     sharedRDD.take(10).foreach(println)
-
-    // Retrieve sharedRDD back from the Cache.
-    val transformedValues: IgniteRDD[Int, Int] = igniteContext.fromCache("sharedRDD")
 
     println(">>> #1 Executing SQL query over Ignite Shared RDD...")
 
     // Execute a SQL query over the Ignite Shared RDD.
-    val df = transformedValues.sql("select * from Integer ")
+    val df = sharedRDD.sql("select _key, _val from Integer where _key < 10 and _val % 2 = 0")
 
     // Show ten rows from the result set.
     df.show()
